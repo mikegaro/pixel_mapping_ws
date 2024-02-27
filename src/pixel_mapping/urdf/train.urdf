@@ -1,0 +1,62 @@
+<robot name="pi_robot">
+
+	<!-- * * * BASE LINK * * * -->
+ 	<link name="base_link">
+		<visual>
+		    <origin xyz="0 0 0.25" rpy="0 0 0"/>
+			<geometry>
+				<box size="2 2 0.5"/>
+			</geometry>
+			<material name="Cyan1">
+	       		<color rgba="1.0 1.0 1.0 1.0"/>
+	     	</material>
+		</visual>
+
+	</link>
+
+  <!-- * * * JOINT: BASE LINK AND CAMERA BASE * * * -->
+	<joint name="camera_support_joint_bottom" type="fixed">
+    	<parent link="base_link"/>
+    	<child link="camera_base"/>
+    	<origin xyz="1 0 0" rpy="0 0 0"/>
+	</joint>
+
+  <!-- * * * LINK: CAMERA BASE * * * -->
+  <link name="camera_base">
+	  <visual>
+	    <origin xyz="0 0 0.5" rpy="0 0 0"/>
+			<geometry>
+				<cylinder radius="0.1" length="1"/>
+			</geometry>
+			<material name="Cyan1">
+	       		<color rgba="0 1 0 1"/>
+	    </material>
+		</visual>	
+	</link>
+
+  <joint name="camera_support_joint_top" type="fixed">
+    	<parent link="camera_base"/>
+    	<child link="camera"/>
+    	<origin xyz="0 0 1" rpy="0 0 0"/>
+	</joint>
+
+  <link name="camera">
+	  <visual>
+	    <origin xyz="0 0 0" rpy="0 0 0"/>
+			<geometry>
+				<box size="0.3 0.15 0.15"/>
+			</geometry>
+			<material name="Cyan1">
+	       		<color rgba="0 1 0 1"/>
+	    </material>
+		</visual>	
+	</link>
+
+  <joint name="camera_pov" type="fixed">
+    	<parent link="camera"/>
+    	<child link="camera_pov_link"/>
+    	<origin xyz="0.15 0 0" rpy="0 0 0"/>
+	</joint>
+  
+  <link name="camera_pov_link" />
+</robot>
