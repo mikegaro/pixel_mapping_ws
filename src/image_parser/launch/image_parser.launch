@@ -1,0 +1,9 @@
+<launch>
+    <include file="$(find pixel_mapping)/launch/test.launch"/>
+    <node 
+        name="rviz_test_node"
+        pkg="image_parser"
+        type="rviz_test_node"
+        output="screen"
+    />
+</launch>
