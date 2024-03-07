@@ -45,7 +45,7 @@ coordinates_publisher = rospy.Publisher('railway_coordinates', Float32MultiArray
 fourcc = cv2.VideoWriter_fourcc(*'mp4v') #Codec for mp4 format 
 out = cv2.VideoWriter('Results\outputvideo_test10.mp4', fourcc, fps, (display_width, display_height))
 
- Function to detect curves
+# Function to detect curves
 def detect_curve_geometry(cnt):
     # Approximate the contour to a simpler polygon
     epsilon = 0.01 * cv2.arcLength(cnt, True) # Smaller the number results to more points in the approximation, leading to closer fit of original contour. epsilon 0.01 means 1 %. 
