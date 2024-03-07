@@ -45,6 +45,20 @@ coordinates_publisher = rospy.Publisher('railway_coordinates', Float32MultiArray
 fourcc = cv2.VideoWriter_fourcc(*'mp4v') #Codec for mp4 format 
 out = cv2.VideoWriter('Results\outputvideo_test10.mp4', fourcc, fps, (display_width, display_height))
 
+ Function to detect curves
+def detect_curve_geometry(cnt):
+    # Approximate the contour to a simpler polygon
+    epsilon = 0.01 * cv2.arcLength(cnt, True) # Smaller the number results to more points in the approximation, leading to closer fit of original contour. epsilon 0.01 means 1 %. 
+    approx = cv2.approxPolyDP(cnt, epsilon, True)
+    
+    # Compare the number of vertices in the approximation
+    # A contour with a small number of vertices is likely to be a straight line
+    # while a contour with a larger number of vertices is likely to be a curve
+    if len(approx) > 2:  # Adjust this threshold based on your specific case
+        return True, 'Curve'
+    else:
+        return False, 'Not curve'
+
 # Quadratic curve function
 def curve_func(x, a, b, c, d):
     return a * x**3 + b * x**2 + c * x + d
@@ -179,16 +193,22 @@ if w and h:
         for i, cnt in enumerate(long_contours): 
             # Detect curve for the current contour
             curvature = detect_curve(cnt)
-
-            # Check if curvature exceeds a threshold to detect a curve
-            #if curvature < curve_threshold:
-            #   print("This is a curve", curvature)
-
-            #if i % 500 == 0:
-            #    if curvature < curve_threshold:
-            #        print("Curve detected")
-            #    else:
-            #        print("No curve detected")
+            
+            # Calculate the arc length of the contour
+            arc_length = cv2.arcLength(cnt, True)
+          
+            # Detect curve for the current contour
+            is_curve, label = detect_curve_geometry(cnt)
+            
+            #if is_curve:
+            #    label = 'Curve'
+            #else:
+            #    label = 'Not curve'
+            
+            # print(f'Contour {i}: {label}')
+            
+             # Add the classification label as text on the contour image
+            cv2.putText(frame, label, (20, 2000), cv2.FONT_HERSHEY_SIMPLEX, 5, (0, 255, 0), 8)
 
             # Append the coordinates of each contour to the list
             rails_coordinates.append(cnt)
