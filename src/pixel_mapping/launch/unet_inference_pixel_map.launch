@@ -1,0 +1,10 @@
+<launch>
+    <include file="$(find unet)/launch/model.launch"/>
+    <node 
+        name="pixel_mapping_node"
+        pkg="pixel_mapping"
+        type="pixel_mapping_node.py"
+        required="true"
+        output="screen"/>
+
+</launch>

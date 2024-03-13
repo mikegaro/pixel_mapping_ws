@@ -1,0 +1,9 @@
+<launch>
+    <include file="$(find video)/launch/video.launch"/>
+    <node name="ed_node"
+          pkg="edge_detection"
+          type="edge_detection6.py"
+          required="true"
+          output="screen">
+    </node>
+</launch>

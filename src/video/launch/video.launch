@@ -1,0 +1,9 @@
+<launch>
+    <param name="video_file" value="$(find video)/test1.mp4"/>
+    <node 
+        name="video_publisher_node"
+        pkg="video"
+        type="video_publisher_node.py">
+    </node>
+    
+</launch>

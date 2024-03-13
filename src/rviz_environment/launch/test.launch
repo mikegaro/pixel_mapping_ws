@@ -1,7 +1,7 @@
 <launch>
     <arg 
         name="model"
-        default="$(find pixel_mapping)/urdf/train.urdf"
+        default="$(find rviz_environment)/urdf/locomotive.urdf"
     />
     
     <node 
@@ -20,7 +20,7 @@
         type="rviz"
         name="rviz"
         pkg="rviz"
-        args="-d $(find pixel_mapping)/rviz/urdf.rviz"
+        args="-d $(find rviz_environment)/rviz/urdf.rviz"
         required="true" 
     />
 
