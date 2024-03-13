@@ -1,3 +1,6 @@
 build/
 devel/
 .catkin_workspace
+.pth
+.mp4
+__pycache__/
