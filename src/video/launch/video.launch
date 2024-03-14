@@ -1,5 +1,5 @@
 <launch>
-    <param name="video_file" value="$(find video)/test1.mp4"/>
+    <param name="video_file" value="$(find video)/Test_1_30mph_overcast_full_track.mp4"/>
     <node 
         name="video_publisher_node"
         pkg="video"
