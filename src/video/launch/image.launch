@@ -1,0 +1,9 @@
+<launch>
+    <param name="image_file" value="$(find video)/alvium.jpeg"/>
+    <node 
+        name="video_publisher_node"
+        pkg="video"
+        type="publish_image.py"
+        required="true">
+    </node>
+</launch>

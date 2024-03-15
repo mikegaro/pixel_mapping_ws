@@ -1,0 +1,13 @@
+<?xml version="1.0" ?>
+
+<launch>
+  <param name="track_map_file"
+         type="str"
+         value="$(find gps)/swift-gnss-20240305-172650_map.csv"/>
+  <node pkg="gps" 
+        type="gps_node"
+        name="gps_node"
+        output="screen"
+  />
+
+</launch>
