@@ -1,0 +1,10 @@
+<launch>
+    <param name="video_file" value="$(find video)/Test_1_30mph_overcast_full_track.mp4"/>
+    <node 
+        name="video_publisher_node"
+        pkg="video"
+        type="video_publisher_node.py"
+        required="true">
+    </node>
+    
+</launch>

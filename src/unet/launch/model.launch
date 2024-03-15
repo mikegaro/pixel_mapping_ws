@@ -1,0 +1,13 @@
+<launch>
+    <param name="model_file" value="$(find unet)/UNet_vgg16_50epochs_v3.5.pth"/>
+    <include file="$(find video)/launch/image.launch"/>
+    <node name="unet_inference_node"
+          pkg="unet"
+          type="inference_node.py"
+          required="true"
+          output="screen"/>
+    <node name="rqt" 
+          pkg="rqt_image_view"
+          type="rqt_image_view"
+          required="true"/>
+</launch>
