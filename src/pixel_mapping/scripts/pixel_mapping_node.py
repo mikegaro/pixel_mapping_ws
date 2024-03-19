@@ -35,7 +35,7 @@ class PixelMappingNode():
         self.GPSposition_long = -79.96923472 # Example usage location
 
         # Orientation angle (Northeast = 55 degrees)
-        self.orientation_angle = 0
+        self.orientation_angle = 50
 
         # Calculated fields
         self.degrees_per_pixel_vertical = 2 * math.atan((self.sensor_height_mm / 2) / self.focal_length_mm) * (180 / math.pi) / self.image_resolution_height
@@ -59,8 +59,6 @@ class PixelMappingNode():
             x_pixel.append(x)
             mean_point_dict[y] = x_pixel
 
-        
-
         # for y in mean_point_dict.keys():
         #     print(f"{y} is {mean_point_dict[y]}")
 
@@ -83,7 +81,7 @@ class PixelMappingNode():
 
         for x,y in list(zip(x_array_filtered[::50], y_array[::50])):
             #print(f"In {y} the average is {x}")
-            vertical_distance = self.calculate_ground_distance_from_bottom(720-y, self.calibrated_tilt_angle)
+            vertical_distance = self.calculate_ground_distance_from_bottom(self.image_resolution_height-y, self.calibrated_tilt_angle)
             #print(f"y = {y} -> distance = {vertical_distance}")
 
             # Adjusted horizontal calculation using the midpoint as reference
@@ -99,6 +97,9 @@ class PixelMappingNode():
             #print(new_lat, new_long)
 
             cv2.circle(image, (int(x), int(y)), radius=5, color=(0, 0, 255), thickness=-1)
+            text = f"{vertical_distance:.2f} m"
+            cv2.putText(image, text, (int(x) + 10, int(y)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+
 
            
         #image= cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -138,13 +139,13 @@ class PixelMappingNode():
     
     def calibrate_tilt_angle(self):
         # Calibration logic for the camera tilt angle
-        pixels_marks = [459.2063492063492,
-                        459.2063492063492 + 157.2410307411881,
-                        459.2063492063492 + 157.2410307411881 + 88.94556016585328,
-                        459.2063492063492 + 157.2410307411881 + 88.94556016585328 + 43.126012074762436,
-                        459.2063492063492 + 157.2410307411881 + 88.94556016585328 + 46.126012074762436 + 6.263069139966262,
-                        459.2063492063492 + 157.2410307411881 + 88.94556016585328 + 46.126012074762436 + 6.263069139966262 + 5.437125487757151,
-                        459.2063492063492 + 157.2410307411881 + 88.94556016585328 + 46.126012074762436 + 6.263069139966262 + 5.437125487757151 + 4.918927561099161]
+        pixels_marks = [452.78740157480314,
+                        452.78740157480314 + 140.78837222960843,
+                        452.78740157480314 + 140.78837222960843 + 70.04301537827146,
+                        452.78740157480314 + 140.78837222960843 + 70.04301537827146 + 35.39672048977434,
+                        452.78740157480314 + 140.78837222960843 + 70.04301537827146 + 35.39672048977434 + 2.923012983361732,
+                        452.78740157480314 + 140.78837222960843 + 70.04301537827146 + 35.39672048977434 + 2.923012983361732 + 2.508970042590426,
+                        452.78740157480314 + 140.78837222960843 + 70.04301537827146 + 35.39672048977434 + 2.923012983361732 + 2.508970042590426 + 0.260651629072697]
         distances = [25, 
                      50, 
                      100, 
