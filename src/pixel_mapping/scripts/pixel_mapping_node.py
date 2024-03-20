@@ -35,7 +35,10 @@ class PixelMappingNode():
         self.GPSposition_long = -79.96923472 # Example usage location
 
         # Orientation angle (Northeast = 55 degrees)
-        self.orientation_angle = 0
+        self.orientation_angle = 55
+
+        # Track width 
+        self.track_width = 1.435 # Value obtained with Wabtec
 
         # Calculated fields
         self.degrees_per_pixel_vertical = 2 * math.atan((self.sensor_height_mm / 2) / self.focal_length_mm) * (180 / math.pi) / self.image_resolution_height
@@ -44,7 +47,7 @@ class PixelMappingNode():
         self.calibrated_tilt_angle = self.calibrate_tilt_angle()
 
     def callback(self, msg):
-        midpoint_x_reference = 501.64  # The calculated midpoint x-coordinate for 1280x720 resolution
+        #midpoint_x_reference = 501.64  # The calculated midpoint x-coordinate for 1280x720 resolution
 
         pixel_list = list(zip(msg.x, msg.y))
         print(pixel_list[0])
@@ -59,7 +62,22 @@ class PixelMappingNode():
             x_pixel.append(x)
             mean_point_dict[y] = x_pixel
 
-        
+        # Determine the bottom most y-coordinate
+        max_y = max(mean_point_dict.keys())
+
+        # Extract x-coordinates corresponding to the bottom-most y-coordinate 
+        bottom_most_x_coords = mean_point_dict[max_y]
+
+        # Calculate the midpoint of the x-coordinates at the bottom-most level
+        if bottom_most_x_coords:
+            min_x = min(bottom_most_x_coords)
+            max_x = max(bottom_most_x_coords)
+            # Calculate midpoint as the middle of the min and max x-coordinates. 
+            midpoint_x_bottom = (min_x + max_x) / 2
+            #print(f"Midpoint X-coordinate at the bottom-most y-level ({max_y}): {midpoint_x_bottom}")
+        else: 
+            print("No x-coordinates found at the bottom-most y-level.")
+            midpoint_x_bottom = None  # Or handle this case as needed
 
         # for y in mean_point_dict.keys():
         #     print(f"{y} is {mean_point_dict[y]}")
@@ -86,23 +104,60 @@ class PixelMappingNode():
             vertical_distance = self.calculate_ground_distance_from_bottom(720-y, self.calibrated_tilt_angle)
             #print(f"y = {y} -> distance = {vertical_distance}")
 
+            ### Horizontal calculation ###
+
+            # Obtain real degree from vertical distance
+            horizontal_real_distance_degree = self.degrees_per_pixel_horizontal * vertical_distance
+            #print(horizontal_real_distance_degree)
+
+            # Horizontal distance with no consideration of meters per pixels factor
+            horizontal_distance_no_scaling = math.tan(math.radians(horizontal_real_distance_degree)) * vertical_distance
+
+            # Offset from one of the railways to the middle. 
+            horizontal_offset_pixels = min_x - midpoint_x_bottom
+
+            # Divide the track width by half
+            half_track_width_meters = self.track_width / 2
+
+            # Now calculate the pixels per meter ratio using the half width
+            if half_track_width_meters != 0:  # Prevent division by zero
+                pixel_per_meter = horizontal_offset_pixels / half_track_width_meters
+            else:
+                pixel_per_meter = None  # Handle the case where the track half-width is zero or unknown
+                print("Half track width in meters is not defined.")
+
+            horizontal_distance = horizontal_distance_no_scaling / pixel_per_meter
+
+            # Output the pixel per meter for further use
+            #print(f"Pixel per meter: {pixel_per_meter}")
+
             # Adjusted horizontal calculation using the midpoint as reference
-            horizontal_offset = x - midpoint_x_reference
-            horizontal_angle = horizontal_offset * self.degrees_per_pixel_horizontal
-            horizontal_distance = vertical_distance * math.tan(math.radians(horizontal_angle))
+            #horizontal_offset = x - midpoint_x_bottom
+            #print(horizontal_offset)
+            #horizontal_angle = horizontal_offset * self.degrees_per_pixel_horizontal
+            #horizontal_distance = vertical_distance * math.tan(math.radians(horizontal_angle))
 
             print(f"x = {horizontal_distance:.5f} m, y = {vertical_distance:.5f} m")
 
              # Convert to GPS coordinates
             new_lat, new_long = self.convert_to_gps(horizontal_distance, vertical_distance)
-            print(f"New GPS coordinates Latitude and Longitude: {new_lat}, {new_long}")
+            #print(f"New GPS coordinates Latitude and Longitude: {new_lat}, {new_long}")
             #print(new_lat, new_long)
 
             cv2.circle(image, (int(x), int(y)), radius=5, color=(0, 0, 255), thickness=-1)
-
+            text = f"{vertical_distance:.2f} m"
+            cv2.putText(image, text, (int(x) + 10, int(y)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+        
            
         #image= cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            
+        
+        if midpoint_x_bottom is not None:
+            start_point = (int(midpoint_x_bottom), 0)  # Start at the top of the image
+            end_point = (int(midpoint_x_bottom), image.shape[0])  # End at the bottom of the image
+            color = (255, 0, 0)  # Red color in BGR
+            thickness = 2  # Line thickness
+
+            cv2.line(image, start_point, end_point, color, thickness)
 
         self.image_publisher.publish(self.br.cv2_to_imgmsg(image, encoding='rgb8'))
 

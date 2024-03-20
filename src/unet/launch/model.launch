@@ -1,7 +1,13 @@
 <launch>
+<<<<<<< HEAD
     <param name="model_file" value="$(find unet)/UNet_vgg16_50epochs_v3.5.pth"/>
     <include file="$(find video)/launch/image.launch"/>
     <node name="unet_inference_node"
+=======
+    <param name="model_file" value="$(find unet)/UNet_s3-19-14-18_epoch1_valvium_loss0.021.pth"/>
+    <include file="$(find video)/launch/video.launch"/>
+    <node name="unet_inference_node" 
+>>>>>>> c911faf... Added refinement to the x-coordinate calibration by using pixel to meter ratio gotten from the track width
           pkg="unet"
           type="inference_node.py"
           required="true"
