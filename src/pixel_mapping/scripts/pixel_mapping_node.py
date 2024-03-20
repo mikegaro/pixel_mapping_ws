@@ -81,7 +81,7 @@ class PixelMappingNode():
         image = np.array(self.br.imgmsg_to_cv2(msg.image))
 
 
-        for x,y in list(zip(x_array_filtered[::50], y_array[::50])):
+        for x,y in list(zip(x_array_filtered[::25], y_array[::25])):
             #print(f"In {y} the average is {x}")
             vertical_distance = self.calculate_ground_distance_from_bottom(720-y, self.calibrated_tilt_angle)
             #print(f"y = {y} -> distance = {vertical_distance}")

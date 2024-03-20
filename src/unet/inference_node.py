@@ -16,8 +16,8 @@ import cv2
 import PIL
 import numpy as np
 
-WIDTH = 1280
-HEIGHT = 720
+WIDTH = 1920
+HEIGHT = 1080
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 class UnetNode:
@@ -39,13 +39,15 @@ class UnetNode:
     def callback(self, msg):
         cv2_img_original = self.br.imgmsg_to_cv2(msg)
         cv2_img = adjust_vibrance(1.5, cv2_img_original)
-        cv2_img = adjust_contrast(cv2_img)
-        # cv2_img = cv2.GaussianBlur(cv2_img, (5,5),cv2.BORDER_DEFAULT)
-        # cv2_img = increase_sharpening(cv2_img)
+        #cv2_img = adjust_contrast(cv2_img_original)
+        #cv2_img = cv2.GaussianBlur(cv2_img, (5,5),cv2.BORDER_DEFAULT)
+        cv2_img = increase_sharpening(cv2_img_original)
         image = PIL.Image.fromarray(cv2.cvtColor(cv2_img, cv2.COLOR_BGR2RGB))
         img_transforms = tf.Compose([
             tf.Resize((HEIGHT, WIDTH)),
-            tf.ToTensor()
+            tf.ToTensor(),
+            tf.Normalize(mean=[0.2752, 0.2546, 0.2860],
+                         std=[0.1541, 0.1535, 0.1679])
             ])
         image = img_transforms(image).unsqueeze(0)
         image = image.to(DEVICE)
