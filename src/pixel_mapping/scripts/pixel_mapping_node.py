@@ -31,11 +31,23 @@ class PixelMappingNode():
         self.image_resolution_width = 1280
 
         # LAT LONG PARAMETERS 
-        self.GPSposition_lat = 42.16179665 # Example usage location
-        self.GPSposition_long = -79.96923472 # Example usage location
+        self.GPSposition_lat = 	42.1612996 # Example usage location
+        self.GPSposition_long = -79.970595 # Example usage location
 
-        # Orientation angle (Northeast = 55 degrees)
-        self.orientation_angle = 55
+        # PREV_GPS_POSITION
+        self.PrevGPS_position_lat = self.GPSposition_lat
+        self.PrevGPS_position_long = self.GPSposition_long
+
+        # CURRENT_GPS_POSITION
+        self.currentGPS_position_lat = 42.1485987
+        self.currentGPS_position_long = -80.0074604
+
+        # Orientation angle (Northeast = 70 degrees)
+        self.orientation_angle = 250
+        #self.orientation_angle = self.calculate_orientation_angle(
+        #    {'lat': self.PrevGPS_position_lat, 'lon': self.PrevGPS_position_long},
+        #    {'lat': self.currentGPS_position_lat, 'lon': self.currentGPS_position_long}
+        #    )
 
         # Track width 
         self.track_width = 1.435 # Value obtained with Wabtec
@@ -137,12 +149,13 @@ class PixelMappingNode():
             #horizontal_angle = horizontal_offset * self.degrees_per_pixel_horizontal
             #horizontal_distance = vertical_distance * math.tan(math.radians(horizontal_angle))
 
-            print(f"x = {horizontal_distance:.5f} m, y = {vertical_distance:.5f} m")
+            #print(f"x = {horizontal_distance:.5f} m, y = {vertical_distance:.5f} m")
 
              # Convert to GPS coordinates
             new_lat, new_long = self.convert_to_gps(horizontal_distance, vertical_distance)
             #print(f"New GPS coordinates Latitude and Longitude: {new_lat}, {new_long}")
-            #print(new_lat, new_long)
+            print(new_lat, new_long)
+            
 
             cv2.circle(image, (int(x), int(y)), radius=5, color=(0, 0, 255), thickness=-1)
             text = f"{vertical_distance:.2f} m"
@@ -162,6 +175,31 @@ class PixelMappingNode():
         self.image_publisher.publish(self.br.cv2_to_imgmsg(image, encoding='rgb8'))
 
 
+    def calculate_orientation_angle(self, p1, p2):
+        """ 
+        Parameters: 
+            - p1: Dictionary with 'lat' and 'long' for the first points lat and long coordinates.
+            - p2: Dictionary with 'lat' and 'long' for the second points lat and long coordinates. 
+
+        Returns: 
+            - The orientation angle from p1 and p2 in degrees relative to north. 
+        """
+        lat1 = math.radians(p1['lat'])
+        lon1 = math.radians(p1['lon'])
+        lat2 = math.radians(p1['lat'])
+        lon2 = math.radians(p1['lon'])
+
+        dLon = lon2 - lon1
+
+        y = math.sin(dLon) * math.cos(lat2)
+        x = math.cos(lat1) * math.sin(lat2) - math.sin(lat1) * math.cos(lat2) * math.cos(dLon)
+        bearing = math.atan2(y, x)
+
+        bearing_degrees = math.degrees(bearing)
+        bearing_degrees = (bearing_degrees + 360) % 360
+
+        return bearing_degrees
+    
     def convert_to_gps(self, x_distance, y_distance):
         meters_per_degree_lat = 111139
         delta_lat = y_distance / meters_per_degree_lat
