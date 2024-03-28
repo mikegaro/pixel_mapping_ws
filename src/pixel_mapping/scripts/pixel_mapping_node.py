@@ -31,19 +31,19 @@ class PixelMappingNode():
         self.image_resolution_width = 1280
 
         # LAT LONG PARAMETERS 
-        self.GPSposition_lat = 	42.1612996 # Example usage location
-        self.GPSposition_long = -79.970595 # Example usage location
+        self.GPSposition_lat = 	42.1625401 # Example usage location
+        self.GPSposition_long = -79.9671979 # Example usage location
 
         # PREV_GPS_POSITION
         self.PrevGPS_position_lat = self.GPSposition_lat
         self.PrevGPS_position_long = self.GPSposition_long
 
         # CURRENT_GPS_POSITION
-        self.currentGPS_position_lat = 42.1485987
+        self.currentGPS_position_lat = 42.1624935
         self.currentGPS_position_long = -80.0074604
 
         # Orientation angle (Northeast = 70 degrees)
-        self.orientation_angle = 250
+        self.orientation_angle = 70
         #self.orientation_angle = self.calculate_orientation_angle(
         #    {'lat': self.PrevGPS_position_lat, 'lon': self.PrevGPS_position_long},
         #    {'lat': self.currentGPS_position_lat, 'lon': self.currentGPS_position_long}

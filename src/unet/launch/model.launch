@@ -1,5 +1,5 @@
 <launch>
-    <param name="model_file" value="$(find unet)/UNet_s3-19-14-18_epoch1_valvium_loss0.021.pth"/>
+    <param name="model_file" value="$(find unet)/UNet_s3-14-15-46_epoch30_vbaselar_loss0.037.pth"/>
     <include file="$(find video)/launch/video.launch"/>
     <node name="unet_inference_node" 
           pkg="unet"
