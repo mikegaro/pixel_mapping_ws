@@ -13,6 +13,7 @@ import cv2
 from scipy.interpolate import make_interp_spline
 from scipy.signal import savgol_filter
 from scipy.optimize import minimize
+from sklearn.cluster import KMeans
 
 class PixelMappingNode():
     def __init__(self):
@@ -62,6 +63,11 @@ class PixelMappingNode():
         #midpoint_x_reference = 501.64  # The calculated midpoint x-coordinate for 1280x720 resolution
 
         pixel_list = list(zip(msg.x, msg.y))
+        image = np.array(self.br.imgmsg_to_cv2(msg.image))
+
+        # Separating the railway points
+        left_railway_points, right_railway_points = self.separate_railways_points(pixel_list)
+
         print(pixel_list[0])
         print(pixel_list[-1])
         sorted_pixel_list = sorted(pixel_list, key=lambda a: a[1])
@@ -84,11 +90,11 @@ class PixelMappingNode():
         if bottom_most_x_coords:
             min_x = min(bottom_most_x_coords)
             max_x = max(bottom_most_x_coords)
-            # Calculate midpoint as the middle of the min and max x-coordinates. 
+        #    # Calculate midpoint as the middle of the min and max x-coordinates. 
             midpoint_x_bottom = (min_x + max_x) / 2
             #print(f"Midpoint X-coordinate at the bottom-most y-level ({max_y}): {midpoint_x_bottom}")
         else: 
-            print("No x-coordinates found at the bottom-most y-level.")
+        #    print("No x-coordinates found at the bottom-most y-level.")
             midpoint_x_bottom = None  # Or handle this case as needed
 
         # for y in mean_point_dict.keys():
@@ -108,8 +114,6 @@ class PixelMappingNode():
         x_y_smooth_fit = make_interp_spline(y_array, x_array)
         x_array_smooth = x_y_smooth_fit(y_array)
         x_array_filtered = savgol_filter(x_array, 51, 2)
-        image = np.array(self.br.imgmsg_to_cv2(msg.image))
-
 
         for x,y in list(zip(x_array_filtered[::50], y_array[::50])):
             #print(f"In {y} the average is {x}")
@@ -161,19 +165,58 @@ class PixelMappingNode():
             text = f"{vertical_distance:.2f} m"
             cv2.putText(image, text, (int(x) + 10, int(y)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
         
-           
-        #image= cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        if len(left_railway_points) > 0 and len(right_railway_points) > 0:
+            # Find bottom-most points for left and right railway
+            bottom_most_left = left_railway_points[np.argmax(left_railway_points[:, 1])]
+            bottom_most_right = right_railway_points[np.argmax(right_railway_points[:, 1])]
         
-        if midpoint_x_bottom is not None:
-            start_point = (int(midpoint_x_bottom), 0)  # Start at the top of the image
-            end_point = (int(midpoint_x_bottom), image.shape[0])  # End at the bottom of the image
-            color = (255, 0, 0)  # Red color in BGR
-            thickness = 2  # Line thickness
+            # Calculate midpoint and track width
+            midpoint_x = (bottom_most_left[0] + bottom_most_right[0]) / 2
+            track_width = abs(bottom_most_right[0] - bottom_most_left[0])
+            print("Track width pixels: ",track_width)
 
-            cv2.line(image, start_point, end_point, color, thickness)
+            # Visualize the midpoint as a red vertical line
+            cv2.line(image, (int(midpoint_x), 0), (int(midpoint_x), image.shape[0]), (0, 255, 0), 2)
+
+            # Visualize track width as a green line at the bottom-most points
+            cv2.line(image, tuple(bottom_most_left.astype(int)), tuple(bottom_most_right.astype(int)), (0, 255, 0), 4)
 
         self.image_publisher.publish(self.br.cv2_to_imgmsg(image, encoding='rgb8'))
 
+
+    def separate_railways_points(self, points): 
+        """
+        Separate points into two clusters, assuming they represent left and right railway points.
+
+        :param points: A list of (x, y) tuples representing detected points.
+        :return: Two lists, one for each cluster of points, assumed to be left and right railways.
+        """
+        # Convert points to a NumPy array for K-means
+        X = np.array(points)
+
+        # Perform K-means clustering with 2 clusters
+        kmeans = KMeans(n_clusters=2, random_state=0).fit(X)
+
+        # Separate the points based on the labels assigned by K-means
+        left_railway_points = X[kmeans.labels_ == 0]
+        right_railway_points = X[kmeans.labels_ == 1]
+
+        # Determine which set of points is on the left and which is on the right
+        if np.mean(left_railway_points[:, 0]) > np.mean(right_railway_points[:, 0]):
+            # Swap if we've incorrectly identified the left as the right
+            left_railway_points, right_railway_points = right_railway_points, left_railway_points
+
+        return left_railway_points, right_railway_points
+    
+
+    def calculate_pixel_width_bottom(self, bottom_most_x_coords):
+        if not bottom_most_x_coords: 
+            print("No bottom most x coordinates")
+            return None
+        
+        # Calculate pixel distance between the leftmost and rightmost x coordinates at the bottom 
+        pixel_distance = max(bottom_most_x_coords) - min(bottom_most_x_coords)
+        return pixel_distance
 
     def calculate_orientation_angle(self, p1, p2):
         """ 
