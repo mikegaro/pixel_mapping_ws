@@ -115,6 +115,32 @@ class PixelMappingNode():
         x_array_smooth = x_y_smooth_fit(y_array)
         x_array_filtered = savgol_filter(x_array, 51, 2)
 
+        if len(left_railway_points) > 0 and len(right_railway_points) > 0:
+        # Find the common bottom-most y-coordinate in both left and right railway points
+        # notation [:, 1] means "select all rows (:) from the second column (1, since indexing starts at 0)"
+            common_bottom_y = min(np.max(left_railway_points[:, 1]), np.max(right_railway_points[:, 1]))
+
+            # Filter points at this common y-coordinate
+            bottom_points_left = left_railway_points[left_railway_points[:, 1] == common_bottom_y]
+            bottom_points_right = right_railway_points[right_railway_points[:, 1] == common_bottom_y]
+
+            # Calculate the midpoint and track width using these bottom points
+            if bottom_points_left.size > 0 and bottom_points_right.size > 0:
+                # [:,0] get every row from x coordinate
+                left_most_x = np.max(bottom_points_left[:, 0])
+                right_most_x = np.max(bottom_points_right[:, 0])
+
+                midpoint_x = (left_most_x + right_most_x) / 2
+                track_width = right_most_x - left_most_x
+                print("Track width in pixels:", track_width)
+
+                # Draw the track width line (green) at the common bottom-most y-coordinate
+                cv2.line(image, (int(left_most_x), int(common_bottom_y)), (int(right_most_x), int(common_bottom_y)), (0, 255, 0), 4)
+
+                # Draw the midpoint line (red)
+                cv2.line(image, (int(midpoint_x), 0), (int(midpoint_x), image.shape[0]), (255, 0, 0), 1)
+
+
         for x,y in list(zip(x_array_filtered[::50], y_array[::50])):
             #print(f"In {y} the average is {x}")
             vertical_distance = self.calculate_ground_distance_from_bottom(self.image_resolution_height-y, self.calibrated_tilt_angle)
@@ -164,45 +190,6 @@ class PixelMappingNode():
             cv2.circle(image, (int(x), int(y)), radius=5, color=(0, 0, 255), thickness=-1)
             text = f"{vertical_distance:.2f} m"
             cv2.putText(image, text, (int(x) + 10, int(y)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
-
-        if len(left_railway_points) > 0 and len(right_railway_points) > 0:
-        # Find the common bottom-most y-coordinate in both left and right railway points
-            common_bottom_y = min(np.max(left_railway_points[:, 1]), np.max(right_railway_points[:, 1]))
-
-            # Filter points at this common y-coordinate
-            bottom_points_left = left_railway_points[left_railway_points[:, 1] == common_bottom_y]
-            bottom_points_right = right_railway_points[right_railway_points[:, 1] == common_bottom_y]
-
-            # Calculate the midpoint and track width using these bottom points
-            if bottom_points_left.size > 0 and bottom_points_right.size > 0:
-                left_most_x = np.min(bottom_points_left[:, 0])
-                right_most_x = np.max(bottom_points_right[:, 0])
-
-                midpoint_x = (left_most_x + right_most_x) / 2
-                track_width = right_most_x - left_most_x
-                print(track_width)
-
-                # Draw the track width line (green) at the common bottom-most y-coordinate
-                cv2.line(image, (int(left_most_x), int(common_bottom_y)), (int(right_most_x), int(common_bottom_y)), (0, 255, 0), 2)
-
-                # Draw the midpoint line (red)
-                cv2.line(image, (int(midpoint_x), 0), (int(midpoint_x), image.shape[0]), (0, 0, 255), 2)
-
-        #if len(left_railway_points) > 0 and len(right_railway_points) > 0:
-            # Find bottom-most points for left and right railway
-        #    bottom_most_left = left_railway_points[np.argmax(left_railway_points[:, 1])]
-        #    bottom_most_right = right_railway_points[np.argmax(right_railway_points[:, 1])]
-        
-            # Calculate midpoint and track width
-        #    midpoint_x = (bottom_most_left[0] + bottom_most_right[0]) / 2
-        #    track_width = abs(bottom_most_right[0] - bottom_most_left[0])
-        #    print("Track width pixels: ",track_width)
-
-            # Visualize the midpoint as a red vertical line
-        #    cv2.line(image, (int(midpoint_x), 0), (int(midpoint_x), image.shape[0]), (0, 255, 0), 2)
-
-            # Visualize track width as a green line at the bottom-most points
-        #    cv2.line(image, tuple(bottom_most_left.astype(int)), tuple(bottom_most_right.astype(int)), (0, 255, 0), 4)
 
         self.image_publisher.publish(self.br.cv2_to_imgmsg(image, encoding='rgb8'))
 
